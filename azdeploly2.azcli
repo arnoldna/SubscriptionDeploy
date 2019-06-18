@@ -1,0 +1,5 @@
+
+az deployment create --location 'west us' --template-file './vnet2.json'
+
+
+az deployment create --name demoDeployment --location centralus --template-file './subscriptionDeploy.json' --parameters rgName=demoResourceGroup rgLocation=centralus storagePrefix=natestore

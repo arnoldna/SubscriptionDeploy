@@ -1,0 +1,1 @@
+az deployment create --name demoDeployment --location centralus --template-file './subscriptionDeploy.json' --parameters rgName=demoResourceGroup rgLocation=centralus storagePrefix=natestore
