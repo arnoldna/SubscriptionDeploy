@@ -12,6 +12,7 @@ The attached subscriptionDeploy.json will create the following:
 * Azure CLI installed on the workstation you plan to deploy from.
 * Make sure you are in the correct subscrition that you want to deploy the resource in. By default it will use the 
 current subscription.
+* Update "ID" fields towards the bottom of the scripts with the approriate URI locations to the resource.
 
 Use the following Azure CLI script to deploy your solutions. Make sure you modify your parameter names.
 

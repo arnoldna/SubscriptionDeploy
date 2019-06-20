@@ -135,46 +135,6 @@
                                 }
                               ]
                             }
-                        },
-                        {
-                            
-                            "apiVersion": "2019-03-01",
-                            "type": "Microsoft.Compute/virtualMachines",
-                            "name": "[parameters('vmName')]",
-                            "location": "[resourceGroup().location]",
-                            "dependsOn": [
-                            ],
-                            "tags": {
-                                "displayName": "[parameters('vmName')]"
-                            },
-                            "properties": {
-                                "hardwareProfile": {
-                                    "vmSize": "Standard_A2"
-                                },
-                                "osProfile": {
-                                    "computerName": "[parameters('vmName')]",
-                                    "adminUsername": "[parameters('adminUserName')]",
-                                    "adminPassword": "[parameters('adminPassword')]"
-                                },
-                                "storageProfile": {
-                                    "imageReference": {
-                                        "publisher": "MicrosoftWindowsServer",
-                                        "offer": "WindowsServer",
-                                        "sku": "2016-Datacenter",
-                                        "version": "latest"
-                                    },
-                                    "osDisk": {
-                                        "createOption": "FromImage"
-                                    }
-                                },
-                                "networkProfile": {
-                                    "networkInterfaces": [
-                                        {
-                                            "id": "/subscriptions/5a20a144-3ba4-4bb1-8a41-38ae47cf0772/resourceGroups/demoResourceGroup/providers/Microsoft.Network/networkInterfaces/NateNIC"
-                                        }
-                                    ]
-                                }
-                            }
                         }
                     ],
                     "outputs": {
