@@ -17,21 +17,25 @@
             "defaultValue": "VNet1"
         },
         "vmName": {
-            "type": "string"
-        },
-        "adminUsername": {
             "type": "string",
-            "defaultValue": "arnoldna"
+            "defaultValue": "vm"
         },
-        "adminPassword": {
-            "type": "string"
+        "publicIpDNS": {
+            "type": "string",
+            "defaultValue": "[concat(toLower(parameters('vmName')), uniqueString(newGuid()))]"
         },
-        "subID": {
-            "type": "string"
+        "subnet1Name": {
+            "type": "string",
+            "defaultValue": "subnet-1"
+        },
+        "subnet2Name": {
+            "type": "string",
+            "defaultValue": "subnet-2"
         }
     },
     "variables": {
-        "storageName": "[concat(parameters('storagePrefix'), uniqueString(subscription().id, parameters('rgName')))]"
+        "storageName": "[concat(parameters('storagePrefix'), uniqueString(subscription().id, parameters('rgName')))]",
+        "publicIpName": "[concat(parameters('vmName'), '-ip')]"
     },
     "resources": [
         {
@@ -80,13 +84,13 @@
                                 },
                                 "subnets": [
                                     {
-                                        "name": "Subnet-1",
+                                        "name": "[parameters('subnet1Name')]",
                                         "properties": {
                                             "addressPrefix": "10.1.0.0/24"
                                         }
                                     },
                                     {
-                                        "name": "Subnet-2",
+                                        "name": "[parameters('subnet2Name')]",
                                         "properties": {
                                             "addressPrefix": "10.1.1.0/24"
                                         }
@@ -97,7 +101,7 @@
                         {
                             "apiVersion": "2018-08-01",
                             "type": "Microsoft.Network/publicIPAddresses",
-                            "name": "[concat(parameters('vmName'),'-PublicIP')]",
+                            "name": "[variables('publicIpName')]",
                             "location": "[parameters('rgLocation')]",
                             "tags": {
                                 "displayName": "PublicIPAddress"
@@ -105,42 +109,47 @@
                             "properties": {
                                 "publicIPAllocationMethod": "Dynamic",
                                 "dnsSettings": {
-                                    "domainNameLabel": "[toLower(parameters('vmName'))]"
+                                    "domainNameLabel": "[parameters('publicIpDNS')]"
                                 }
                             }
                         },
                         {
                             "name": "NateNIC",
                             "type": "Microsoft.Network/networkInterfaces",
-                            "location": "centralus",
+                            "location": "[parameters('rgLocation')]",
                             "apiVersion": "2018-08-01",
-                            "dependsOn": [ 
+                            "dependsOn": [
+                                "[variables('publicIpName')]"
                             ],
                             "tags": {
-                              "displayName": "NateNIC1"
+                                "displayName": "NateNIC1"
                             },
                             "properties": {
-                              "ipConfigurations": [
-                                {
-                                  "name": "ipconfig1",
-                                  "properties": {
-                                    "privateIPAllocationMethod": "Dynamic",
-                                    "subnet": {
-                                        "id": "[concat('/subscriptions/5a20a144-3ba4-4bb1-8a41-38ae47cf0772/resourceGroups/demoResourceGroup/providers/Microsoft.Network/virtualNetworks/VNet1', '/subnets/', 'Subnet-1')]"
-                                    },
-                                    "publicIPAddress": {
-                                        "id": "/subscriptions/5a20a144-3ba4-4bb1-8a41-38ae47cf0772/resourceGroups/demoResourceGroup/providers/Microsoft.Network/publicIPAddresses/NateVM-PublicIP"
+                                "ipConfigurations": [
+                                    {
+                                        "name": "ipconfig1",
+                                        "properties": {
+                                            "privateIPAllocationMethod": "Dynamic",
+                                            "subnet": {
+                                                "id": "[concat(subscription().id, '/resourceGroups/', parameters('rgName'), '/providers/Microsoft.Network/virtualNetworks/', parameters('vnetName'), '/subnets/', parameters('subnet1Name'))]"
+                                            },
+                                            "publicIPAddress": {
+                                                "id": "[concat(subscription().id, '/resourceGroups/', parameters('rgName'), '/providers/Microsoft.Network/publicIPAddresses/', variables('publicIpName'))]"
+                                            }
+                                        }
                                     }
-                                  }
-                                }
-                              ]
+                                ]
                             }
                         }
                     ],
                     "outputs": {
+                        "resourceID": {
+                            "type": "string",
+                            "value": "[concat(subscription().id, '/resourceGroups/', parameters('rgName'), '/providers/Microsoft.Network/publicIPAddresses/', variables('publicIpName'))]"
+                        }
+                    }
                 }
             }
         }
-    }
     ]
 }
