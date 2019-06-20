@@ -25,9 +25,6 @@
         },
         "adminPassword": {
             "type": "string"
-        },
-        "subID": {
-            "type": "string"
         }
     },
     "variables": {
@@ -66,7 +63,28 @@
                             "sku": {
                                 "name": "Standard_LRS"
                             }
-                        },
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "vnetDeployment",
+            "resourceGroup": "[parameters('rgName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/', parameters('rgName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
                         {
                             "type": "Microsoft.Network/virtualNetworks",
                             "apiVersion": "2018-08-01",
@@ -75,25 +93,46 @@
                             "properties": {
                                 "addressSpace": {
                                     "addressPrefixes": [
-                                        "10.1.0.0/16"
+                                        "10.0.0.0/16"
                                     ]
                                 },
                                 "subnets": [
                                     {
                                         "name": "Subnet-1",
                                         "properties": {
-                                            "addressPrefix": "10.1.0.0/24"
+                                            "addressPrefix": "10.0.0.0/24"
                                         }
                                     },
                                     {
                                         "name": "Subnet-2",
                                         "properties": {
-                                            "addressPrefix": "10.1.1.0/24"
+                                            "addressPrefix": "10.0.1.0/24"
                                         }
                                     }
                                 ]
                             }
-                        },
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "vmNetworkDeployment",
+            "resourceGroup": "[parameters('rgName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/', parameters('rgName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
                         {
                             "apiVersion": "2018-08-01",
                             "type": "Microsoft.Network/publicIPAddresses",
@@ -108,79 +147,59 @@
                                     "domainNameLabel": "[toLower(parameters('vmName'))]"
                                 }
                             }
-                        },
-                        {
-                            "name": "NateNIC",
-                            "type": "Microsoft.Network/networkInterfaces",
-                            "location": "centralus",
-                            "apiVersion": "2018-08-01",
-                            "dependsOn": [ 
-                            ],
-                            "tags": {
-                              "displayName": "NateNIC1"
-                            },
-                            "properties": {
-                              "ipConfigurations": [
-                                {
-                                  "name": "ipconfig1",
-                                  "properties": {
-                                    "privateIPAllocationMethod": "Dynamic",
-                                    "subnet": {
-                                        "id": "[concat('/subscriptions/5a20a144-3ba4-4bb1-8a41-38ae47cf0772/resourceGroups/demoResourceGroup/providers/Microsoft.Network/virtualNetworks/VNet1', '/subnets/', 'Subnet-1')]"
-                                    },
-                                    "publicIPAddress": {
-                                        "id": "/subscriptions/5a20a144-3ba4-4bb1-8a41-38ae47cf0772/resourceGroups/demoResourceGroup/providers/Microsoft.Network/publicIPAddresses/NateVM-PublicIP"
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                        },
-                        {
-                            
-                            "apiVersion": "2019-03-01",
-                            "type": "Microsoft.Compute/virtualMachines",
-                            "name": "[parameters('vmName')]",
-                            "location": "[resourceGroup().location]",
-                            "dependsOn": [
-                            ],
-                            "tags": {
-                                "displayName": "[parameters('vmName')]"
-                            },
-                            "properties": {
-                                "hardwareProfile": {
-                                    "vmSize": "Standard_A2"
-                                },
-                                "osProfile": {
-                                    "computerName": "[parameters('vmName')]",
-                                    "adminUsername": "[parameters('adminUserName')]",
-                                    "adminPassword": "[parameters('adminPassword')]"
-                                },
-                                "storageProfile": {
-                                    "imageReference": {
-                                        "publisher": "MicrosoftWindowsServer",
-                                        "offer": "WindowsServer",
-                                        "sku": "2016-Datacenter",
-                                        "version": "latest"
-                                    },
-                                    "osDisk": {
-                                        "createOption": "FromImage"
-                                    }
-                                },
-                                "networkProfile": {
-                                    "networkInterfaces": [
-                                        {
-                                            "id": "/subscriptions/5a20a144-3ba4-4bb1-8a41-38ae47cf0772/resourceGroups/demoResourceGroup/providers/Microsoft.Network/networkInterfaces/NateNIC"
-                                        }
-                                    ]
-                                }
-                            }
                         }
                     ],
-                    "outputs": {
+                    "outputs": {}
                 }
             }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "NetworkInterface1",
+            "resourceGroup": "[parameters('rgName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/', parameters('rgName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {
+                      "TESTVnetID": "[resourceId(parameters('rgName'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+                      "TESTSubnetRef": "[concat(variables('TESTVnetID'), '/subnets/', 'Subnet-1')]"},
+                    "resources": [
+                      {
+                        "name": "NateNIC",
+                        "type": "Microsoft.Network/networkInterfaces",
+                        "location": "centralus",
+                        "apiVersion": "2018-08-01",
+                        "dependsOn": [ ],
+                        "tags": {
+                          "displayName": "NateNIC1"
+                        },
+                        "properties": {
+                          "ipConfigurations": [
+                            {
+                              "name": "ipconfig1",
+                              "properties": {
+                                "privateIPAllocationMethod": "Dynamic",
+                                "subnet": {
+                                  "id": "[concat(resourceId(parameters('rgName'),'Microsoft.Network/virtualNetworks', parameters('vnetName'), '-VirtualNetwork/subnets/', parameters('vmName'),'/subnets/', 'Subnet-1'))]"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                  
+                    ],
+                    "outputs": {}
+                  }
+                  
+            }
         }
-    }
     ]
 }
