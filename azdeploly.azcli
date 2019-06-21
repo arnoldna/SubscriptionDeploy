@@ -1,5 +1,0 @@
-
-az deployment create --name demoDeployment --location centralus --template-file './subscriptionDeploy.json' --parameters rgName=Demo-RG rgLocation=centralus storagePrefix=demostore vmName=DemoVM adminUsername=demouseradm adminPassword=13BIGmacs13BIGmacs
-
-
-az deployment create --name demoDeployment --location centralus --template-file './subscriptionDeploy.json'

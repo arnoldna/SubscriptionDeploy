@@ -116,7 +116,6 @@
                                     }
                                   ]
                             }
-                        
                         },
                         {
                             "type": "Microsoft.Network/virtualNetworks",
@@ -247,13 +246,30 @@
                                     }
                                 }
                             }
+                            },
+                            {
+                                "apiVersion": "2018-06-01",
+                                "type": "Microsoft.Compute/virtualMachines/extensions",
+                                "name": "[concat(parameters('vmName'),'/', 'InstallWebServer')]",
+                                "location": "[parameters('rglocation')]",
+                                "dependsOn": [
+                                    "[concat('Microsoft.Compute/virtualMachines/',parameters('vmName'))]"
+                                ],
+                                "properties": {
+                                    "publisher": "Microsoft.Compute",
+                                    "type": "CustomScriptExtension",
+                                    "typeHandlerVersion": "1.7",
+                                    "autoUpgradeMinorVersion":true,
+                                    "settings": {
+                                        "fileUris": [
+                                            "https://armtutorials.blob.core.windows.net/usescriptextensions/installWebServer.ps1"
+                                        ],
+                                        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File installWebServer.ps1"
+                                    }
+                                }
                             }
                     ],
                     "outputs": {
-                        "resourceID": {
-                            "type": "string",
-                            "value": "[concat(subscription().id, '/resourceGroups/', parameters('rgName'), '/providers/Microsoft.Network/publicIPAddresses/', variables('publicIpName'))]"
-                        }
                     }
                 }
             }
