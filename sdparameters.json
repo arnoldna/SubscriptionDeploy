@@ -1,0 +1,44 @@
+{
+    "parameters": {
+        "rgName": {
+
+            "defaultValue": "Demo-RG"
+        },
+        "rgLocation": {
+
+            "defaultValue": "centralus"
+        },
+        "storagePrefix": {
+
+            "maxLength": 11,
+            "defaultValue": "demostore"
+        },
+        "vnetName": {
+
+            "defaultValue": "VNet1"
+        },
+        "vmName": {
+
+            "defaultValue": "DemoVM"
+        },
+        "adminUsername": {
+
+            "defaultValue": "devADMuser"
+        },
+        "adminPassword": {
+            "defaultValue": "13BIGmcs13BIGmacs"
+        },
+        "publicIpDNS": {
+
+            "defaultValue": "[concat(toLower(parameters('vmName')), uniqueString(newGuid()))]"
+        },
+        "subnet1Name": {
+
+            "defaultValue": "subnet-1"
+        },
+        "subnet2Name": {
+
+            "defaultValue": "subnet-2"
+        }
+    }
+  }

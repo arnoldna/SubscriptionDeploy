@@ -1,0 +1,1 @@
+New-AzDeployment -Location "centralus" -TemplateFile "subscriptionDeploy.json" -TemplateParameterFile "subscriptionDeploy.parameters.json"

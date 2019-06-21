@@ -31,11 +31,18 @@
         "subnet2Name": {
             "type": "string",
             "defaultValue": "subnet-2"
+        },
+        "adminUsername": {
+            "type": "string"
+        },
+        "adminPassword": {
+            "type": "securestring"
         }
     },
     "variables": {
         "storageName": "[concat(parameters('storagePrefix'), uniqueString(subscription().id, parameters('rgName')))]",
-        "publicIpName": "[concat(parameters('vmName'), '-ip')]"
+        "publicIpName": "[concat(parameters('vmName'), '-ip')]",
+        "networkSecurityGroupName": "[concat(parameters('vnetName'), '-NSG')]"
     },
     "resources": [
         {
@@ -72,10 +79,53 @@
                             }
                         },
                         {
+                            
+                            "apiVersion": "2015-06-15",
+                            "type": "Microsoft.Network/networkSecurityGroups",
+                            "name": "[variables('networkSecurityGroupName')]",
+                            "location": "[parameters('rglocation')]",
+                            "properties": {
+                                "securityRules": [
+                                    {
+                                      "name": "rdp_rule",
+                                      "properties": {
+                                        "description": "Allow RDP",
+                                        "protocol": "Tcp",
+                                        "sourcePortRange": "*",
+                                        "destinationPortRange": "3389",
+                                        "sourceAddressPrefix": "Internet",
+                                        "destinationAddressPrefix": "*",
+                                        "access": "Allow",
+                                        "priority": 100,
+                                        "direction": "Inbound"
+                                      }
+                                    },
+                                    {
+                                      "name": "web_rule",
+                                      "properties": {
+                                        "description": "Allow WEB",
+                                        "protocol": "Tcp",
+                                        "sourcePortRange": "*",
+                                        "destinationPortRange": "80",
+                                        "sourceAddressPrefix": "Internet",
+                                        "destinationAddressPrefix": "*",
+                                        "access": "Allow",
+                                        "priority": 101,
+                                        "direction": "Inbound"
+                                      }
+                                    }
+                                  ]
+                            }
+                        
+                        },
+                        {
                             "type": "Microsoft.Network/virtualNetworks",
                             "apiVersion": "2018-08-01",
                             "name": "[parameters('vnetName')]",
                             "location": "[parameters('rgLocation')]",
+                            "dependsOn": [
+                                "[variables('networkSecurityGroupName')]"
+                            ],
                             "properties": {
                                 "addressSpace": {
                                     "addressPrefixes": [
@@ -86,13 +136,19 @@
                                     {
                                         "name": "[parameters('subnet1Name')]",
                                         "properties": {
-                                            "addressPrefix": "10.1.0.0/24"
+                                            "addressPrefix": "10.1.0.0/24",
+                                            "networkSecurityGroup": {
+                                                "id": "[concat(subscription().id, '/resourceGroups/', parameters('rgName'), '/providers/Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+                                              }
                                         }
                                     },
                                     {
                                         "name": "[parameters('subnet2Name')]",
                                         "properties": {
-                                            "addressPrefix": "10.1.1.0/24"
+                                            "addressPrefix": "10.1.1.0/24",
+                                            "networkSecurityGroup": {
+                                                "id": "[concat(subscription().id, '/resourceGroups/', parameters('rgName'), '/providers/Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+                                              }
                                         }
                                     }
                                 ]
@@ -114,15 +170,16 @@
                             }
                         },
                         {
-                            "name": "NateNIC",
+                            "name": "VM-NIC",
                             "type": "Microsoft.Network/networkInterfaces",
                             "location": "[parameters('rgLocation')]",
                             "apiVersion": "2018-08-01",
                             "dependsOn": [
-                                "[variables('publicIpName')]"
+                                "[variables('publicIpName')]",
+                                "[parameters('vnetName')]"
                             ],
                             "tags": {
-                                "displayName": "NateNIC1"
+                                "displayName": "VM-NIC1"
                             },
                             "properties": {
                                 "ipConfigurations": [
@@ -140,7 +197,57 @@
                                     }
                                 ]
                             }
-                        }
+                        },
+                        {
+                            "apiVersion": "2018-10-01",
+                            "type": "Microsoft.Compute/virtualMachines",
+                            "name": "[parameters('vmName')]",
+                            "location": "[parameters('rgLocation')]",
+                            "dependsOn": [
+                                "[variables('storageName')]",
+                                "Microsoft.Network/networkInterfaces/VM-NIC"
+                            ],
+                            "tags": {
+                                "displayName": "[parameters('vmName')]"
+                            },
+                            "properties": {
+                                "hardwareProfile": {
+                                    "vmSize": "Standard_A2"
+                                },
+                                "osProfile": {
+                                    "computerName": "[parameters('vmName')]",
+                                    "adminUsername": "[parameters('adminUsername')]",
+                                    "adminPassword": "[parameters('adminPassword')]"
+                                },
+                                "storageProfile": {
+                                    "imageReference": {
+                                        "publisher": "MicrosoftWindowsServer",
+                                        "offer": "WindowsServer",
+                                        "sku": "2019-Datacenter-smalldisk",
+                                        "version": "latest"
+                                    },
+                                    "osDisk": {
+                                        "createOption": "FromImage",
+                                        "managedDisk": {
+                                            "storageAccountType": "StandardSSD_LRS"
+                                        }
+                                    }
+                                },
+                                "networkProfile": {
+                                    "networkInterfaces": [
+                                        {
+                                            "id": "[concat(subscription().id, '/resourceGroups/', parameters('rgName'), '/providers/Microsoft.Network/networkInterfaces/', 'VM-NIC')]"
+                                        }
+                                    ]
+                                },
+                                "diagnosticsProfile": {
+                                    "bootDiagnostics": {
+                                        "enabled": false,
+                                        "storageUri": "[concat('http://', toLower(variables('storageName')), '.blob.core.windows.net')]"
+                                    }
+                                }
+                            }
+                            }
                     ],
                     "outputs": {
                         "resourceID": {
